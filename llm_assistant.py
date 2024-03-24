@@ -66,8 +66,6 @@ class LlmAssistant:
             # for each chunk in stream
             for chunk in run:
 
-                print(chunk)
-
                 # if chunk requires to call a tool (function call)\
                 if chunk.event == "thread.run.requires_action":
                     # call the tool
