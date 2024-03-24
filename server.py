@@ -10,6 +10,7 @@ from twilio_server import TwilioClient
 from retellclient.models import operations
 from twilio.twiml.voice_response import VoiceResponse
 import asyncio
+from llm_assistant import LlmAssistant
 
 load_dotenv(override=True)
 
@@ -71,7 +72,7 @@ async def websocket_handler(websocket: WebSocket, call_id: str):
             message = await websocket.receive_text()
             request = json.loads(message)
             # print out transcript
-            os.system('cls' if os.name == 'nt' else 'clear')
+            # os.system('cls' if os.name == 'nt' else 'clear')
             print(json.dumps(request, indent=4))
             
             if 'response_id' not in request:

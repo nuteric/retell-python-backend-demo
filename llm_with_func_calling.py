@@ -1,6 +1,7 @@
 from openai import OpenAI
 import os
 import json
+from libs.go_high_level.appointments import create_appointment
 
 beginSentence = "Hey there, I'm your personal AI therapist, how can I help you?"
 agentPrompt = "Task: As a professional therapist, your responsibilities are comprehensive and patient-centered. You establish a positive and trusting rapport with patients, diagnosing and treating mental health disorders. Your role involves creating tailored treatment plans based on individual patient needs and circumstances. Regular meetings with patients are essential for providing counseling and treatment, and for adjusting plans as needed. You conduct ongoing assessments to monitor patient progress, involve and advise family members when appropriate, and refer patients to external specialists or agencies if required. Keeping thorough records of patient interactions and progress is crucial. You also adhere to all safety protocols and maintain strict client confidentiality. Additionally, you contribute to the practice's overall success by completing related tasks as needed.\n\nConversational Style: Communicate concisely and conversationally. Aim for responses in short, clear prose, ideally under 10 words. This succinct approach helps in maintaining clarity and focus during patient interactions.\n\nPersonality: Your approach should be empathetic and understanding, balancing compassion with maintaining a professional stance on what is best for the patient. It's important to listen actively and empathize without overly agreeing with the patient, ensuring that your professional opinion guides the therapeutic process."
@@ -72,6 +73,47 @@ class LlmClient:
                     },
                 },
             },
+            {
+                "type": "function",
+                "function": {
+                    "name": "book_appointment",
+                    "description": "Book an appointment",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                        "calendarId": {
+                            "type": "string",
+                            "description": "The ID of the calendar"
+                        },
+                        "selectedTimezone": {
+                            "type": "string",
+                            "description": "The timezone for the appointment"
+                        },
+                        "selectedSlot": {
+                            "type": "string",
+                            "description": "The selected time slot for the appointment"
+                        },
+                        "email": {
+                            "type": "string",
+                            "description": "The email of the person making the appointment"
+                        },
+                        "phone": {
+                            "type": "string",
+                            "description": "The phone number of the person making the appointment"
+                        }
+                        },
+                        "required": [
+                            "calendarId",
+                            "selectedTimezone",
+                            "selectedSlot",
+                            "email",
+                            "phone"
+                        ]
+                    }
+                }
+                
+        }
+
         ]
         return functions
     
@@ -124,6 +166,28 @@ class LlmClient:
                     "content": func_call['arguments']['message'],
                     "content_complete": True,
                     "end_call": True,
+                }
+            if func_call['func_name'] == "book_appointment":
+                func_call['arguments'] = json.loads(func_arguments)
+                response = create_appointment(
+                    func_call['arguments']['calendarId'],
+                    func_call['arguments']['selectedTimezone'],
+                    func_call['arguments']['selectedSlot'],
+                    func_call['arguments']['email'],
+                    func_call['arguments']['phone']
+                )
+                # response_message = self.draft_response( {
+                #     "response_id": request['response_id'], 
+                #     "role": "agent",
+                #     "content": "I have successfully booked your appointment."
+                
+                    
+                # })
+                yield {
+                    "response_id": request['response_id'],
+                    "content": func_call['arguments']['message'],
+                    "content_complete": False,
+                    "end_call": False,
                 }
             # Step 5: Other functions here
         else:
